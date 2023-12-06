@@ -16,21 +16,22 @@ typedef struct no
     struct no *esq;
     struct no *dir;
     produto dado;
-    int total;
 } Node;
 
+void liberaMemoria(Node *);
+void liberaArvore(Node **p);
+Node * procuraProd(int *, Node **);
 void escreve_dados(Node *, FILE *);
-void cadastro(Node **);
+void cadastro(Node **, int *);
 void removeproduto(Node **);
-void alteraquantidade(Node **);
+void alteraquantidade(Node **p, int* total);
 void alteranome(Node **);
-void alterapeso(Node **);
-int insere(Node **t, produto dado);
-void preOrdem(Node *t);
-void emOrdem(Node *t);
-void emDesordem(Node *t);
-void posOrdem(Node *t);
-void cria(Node **t);
+void alterapeso(Node **, int* );
+int insere(Node **, produto );
+void preOrdem(Node *);
+void cria(Node **);
+Node* encontrarMinimo(Node* no);
+Node* apagarNo(Node* raiz, int codigo);
 
 int main (void)
 {
@@ -38,9 +39,7 @@ int main (void)
     Node *p;
     int c = 0;
     FILE *fw;
-
-    p = (Node *)malloc(sizeof(Node));
-    cria(&p);
+    int *total;
 
     printf("Sistema de Estoque\n\n");
     printf("====================\n\n");
@@ -57,7 +56,7 @@ int main (void)
         {
 
         case 1:
-            cadastro(&p);
+            cadastro(&p, total);
 
             break;
 
@@ -66,7 +65,7 @@ int main (void)
             break;
 
         case 3:
-            if(p->total <= 0)
+            if(total <= 0)
             {
                 printf("\nSem produtos para exibir! Cadastre produtos primeiro!\n");
                 break;
@@ -79,11 +78,11 @@ int main (void)
             break;
 
         case 5:
-            alterapeso(&p);
+            alterapeso(&p, total);
             break;
 
         case 6:
-            alteraquantidade(&p);
+            alteraquantidade(&p, total);
             break;
 
         case 7:
@@ -95,6 +94,8 @@ int main (void)
         }
     }
     while(c != 7);
+
+    liberaArvore(&p);
 
     return (0);
 }
@@ -108,6 +109,7 @@ int insere(Node **t, produto dado)
 {
     if (*t == NULL)
     {
+        cria(t);
         *t = (Node *)malloc(sizeof(Node));
         if (*t == NULL)
         {
@@ -120,18 +122,18 @@ int insere(Node **t, produto dado)
         return 1;
     }
 
-    if (dado.np%2 == 1)
+    if (dado.np % 2 == 1)
         return insere(&(*t)->esq, dado);
 
     return insere(&(*t)->dir, dado);
 }
 
-void cadastro(Node **p)
+void cadastro(Node **p, int *total)
 {
 
     char r;
     produto t;
-    int i = (*p)->total;
+
     printf("\n\nCadastro de produto\n");
     printf("\nDigite o nome do produto\n");
     scanf("%[^\n]s", &t.nome);
@@ -146,17 +148,12 @@ void cadastro(Node **p)
     getchar();
 
 
-    (*p)->total += 1;
-    i = (*p)->total;
-    t.np = i;
-    insere(&(*p), t);
-
     printf("\nDeseja cadastrar outro produto? s/n\n");
     r = getchar();
     getchar();
 
     if(r == 's')
-        cadastro(&(*p));
+        cadastro(&(*p), total);
 
     return;
 }
@@ -175,32 +172,32 @@ void preOrdem(Node *t)
 }
 
 
+
 void alteranome(Node **p)
-{
-    int j, i;
-    printf("\nDigite o numero de produto do produto que voce deseja alterar: ");
-    scanf("%d", &j);
-
-    if(j > (*p)->total)
-    {
-        printf("\nProduto nao encontrado!\n");
-        return;
-    }
-
-
-
-    printf("\nDigite o nome que voce deseja: ");
-    scanf("%s", &(*p)->dado.nome);
-    printf("\nSalvo com sucesso!");
-    return;
-}
-
-void alteraquantidade(Node **p)
 {
     int j;
     printf("\nDigite o numero de produto do produto que voce deseja alterar: ");
     scanf("%d", &j);
-    if(j > (*p)->total)
+
+    Node *produto = procuraProd(&j, p);
+
+    if (produto->dado.np == -1)
+    {
+        printf("\nProduto nao cadastrado!!\n");
+        return;
+    }
+
+    printf("\nDigite o nome que voce deseja: ");
+    scanf("%29[^\n]", produto->dado.nome);
+    printf("\nSalvo com sucesso!\n");
+}
+
+void alteraquantidade(Node **p, int* total)
+{
+    int j;
+    printf("\nDigite o numero de produto do produto que voce deseja alterar: ");
+    scanf("%d", &j);
+    if (j > *total)
     {
         printf("\nProduto nao encontrado!\n");
         return;
@@ -210,12 +207,12 @@ void alteraquantidade(Node **p)
     printf("\nSalvo com sucesso!");
 }
 
-void alterapeso(Node **p)
+void alterapeso(Node **p, int *total)
 {
     int j;
     printf("\nDigite o numero de produto do produto que voce deseja alterar: ");
     scanf("%d", &j);
-    if(j > (*p)->total)
+    if(j > *total)
     {
         printf("\nProduto nao encontrado!\n");
         return;
@@ -225,28 +222,94 @@ void alterapeso(Node **p)
     printf("\nSalvo com sucesso!");
 }
 
-void removeproduto(Node **p)
-{
-    int codigo, m, j=0;
-    printf("Digite o codigo do produto que deseja remover: ");
-    scanf("%d", &codigo);
+Node* encontrarMinimo(Node* no) {
+    while (no->esq != NULL) {
+        no = no->esq;
+    }
+    return no;
+}
 
-    for (m = 0; m < (*p)->total; m++)
-    {
-        if ((*p)->dado.np == codigo)
-        {
-            for (j = m; j < (*p)->total - 1; j++)
-            {
-                (*p)->dado = (*p)->esq->dado;
-            }
-
-            ((*p)->total)--;
-            printf("Produto removido com sucesso!\n");
-            return;
-        }
+Node* apagarNo(Node* raiz, int codigo) {
+    if (raiz == NULL) {
+        printf("Produto não encontrado.\n");
+        return raiz;
     }
 
+    if (codigo < raiz->dado.np) {
+        raiz->esq = apagarNo(raiz->esq, codigo);
+    } else if (codigo > raiz->dado.np) {
+        raiz->dir = apagarNo(raiz->dir, codigo);
+    } else {
+        // Caso 1: Nó sem filhos ou com apenas um filho
+        if (raiz->esq == NULL) {
+            Node* temp = raiz->dir;
+            free(raiz);
+            printf("Produto removido com sucesso!\n");
+            return temp;
+        } else if (raiz->dir == NULL) {
+            Node* temp = raiz->esq;
+            free(raiz);
+            printf("Produto removido com sucesso!\n");
+            return temp;
+        }
+
+        // Caso 2: Nó com dois filhos
+        Node* temp = encontrarMinimo(raiz->dir); // Encontrar o nó sucessor (menor valor na subárvore direita)
+
+        // Copiar os dados do sucessor para este nó
+        raiz->dado = temp->dado;
+
+        // Apagar o sucessor
+        raiz->dir = apagarNo(raiz->dir, temp->dado.np);
+    }
+
+    return raiz;
+}
+
+// Função para remover um produto
+void removeproduto(Node **p)
+{
+    if (*p == NULL)
+    {
+        printf("\nEstoque vazio. Nada para remover.\n");
+        return;
+    }
+
+    int j;
+    printf("\nDigite o numero de produto do produto que voce deseja remover: ");
+    scanf("%d", &j);
+
+    *p = apagarNo(*p, j);
+}
+
+
+
+Node * procuraProd(int *i, Node **t)
+{
+    if ((*t) != NULL)
+    {
+        if((*t)->dado.np == *i)
+            return (*t);
+
+        procuraProd(i, &(*t)->esq);
+        procuraProd(i, &(*t)->dir);
+    }
     printf("Produto nao encontrado no estoque.\n");
+    *i = -1;
+    return (*t);
+}
+
+void liberaMemoria(Node *raiz) {
+    if (raiz != NULL) {
+        liberaMemoria(raiz->esq);
+        liberaMemoria(raiz->dir);
+        free(raiz);
+    }
+}
+
+void liberaArvore(Node **p) {
+    liberaMemoria(*p);
+    *p = NULL;
 }
 
 /*void escreve_dados(Node *p, FILE *fw) {
