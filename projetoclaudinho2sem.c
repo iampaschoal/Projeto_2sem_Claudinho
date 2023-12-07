@@ -27,7 +27,7 @@ Node * procuraProd(int *, Node **);
 void escreve_dados(Node *, FILE *);
 void cadastro(Node **, int *);
 void removeproduto(Node **);
-void alteraquantidade(Node **p, int* total);
+void alteraquantidade(Node **, int* );
 void alteranome(Node **);
 void alterapeso(Node **, int* );
 int insere(Node **, produto );
