@@ -18,8 +18,11 @@ typedef struct no
     produto dado;
 } Node;
 
+void restauracao(Node **);
+void backup(Node *);
+void escreve_dados(Node *, FILE *);
 void liberaMemoria(Node *);
-void liberaArvore(Node **p);
+void liberaArvore(Node **);
 Node * procuraProd(int *, Node **);
 void escreve_dados(Node *, FILE *);
 void cadastro(Node **, int *);
@@ -30,8 +33,8 @@ void alterapeso(Node **, int* );
 int insere(Node **, produto );
 void preOrdem(Node *);
 void cria(Node **);
-Node* encontrarMinimo(Node* no);
-Node* apagarNo(Node* raiz, int codigo);
+Node* encontrarMinimo(Node* );
+Node* apagarNo(Node* , int );
 
 int main (void)
 {
@@ -39,7 +42,7 @@ int main (void)
     Node *p;
     int c = 0;
     FILE *fw;
-    int *total;
+    int total;
 
     printf("Sistema de Estoque\n\n");
     printf("====================\n\n");
@@ -48,7 +51,7 @@ int main (void)
     do
     {
 
-        printf("\nEscolha uma opcao que deseja\n_________________________________\n1-Cadastrar produto\n2- Remover produto\n3- Exibir produto\n4- Alterar nome de um produto\n5- Alterar peso de um produto\n6- Alterar quantidade de um produto\n7- Sair\nOpcao:");
+        printf("\nEscolha uma opcao que deseja\n_________________________________\n1-Cadastrar produto\n2- Remover produto\n3- Exibir produto\n4- Alterar nome de um produto\n5- Alterar peso de um produto\n6- Alterar quantidade de um produto\n7- Fazer backup\n8- Carregar dados salvos\n9- Sair\nOpcao:");
         scanf("%d", &c);
         getchar();
 
@@ -56,7 +59,7 @@ int main (void)
         {
 
         case 1:
-            cadastro(&p, total);
+            cadastro(&p, &total);
 
             break;
 
@@ -78,22 +81,33 @@ int main (void)
             break;
 
         case 5:
-            alterapeso(&p, total);
+            alterapeso(&p, &total);
             break;
 
         case 6:
-            alteraquantidade(&p, total);
+            alteraquantidade(&p, &total);
             break;
 
         case 7:
+            printf("\nSalvando...");
+            backup(p);
+            break;
+
+        case 8:
+            printf("\nCarregando dados...");
+            restauracao(&p);
+            break;
+
+        case 9:
             printf("\nSaindo...");
             break;
+
 
         default:
             printf("\nDigite uma opcao valida\n\n");
         }
     }
-    while(c != 7);
+    while(c != 9);
 
     liberaArvore(&p);
 
@@ -237,7 +251,7 @@ Node* apagarNo(Node* raiz, int codigo) {
 
     if (codigo < raiz->dado.np) {
         raiz->esq = apagarNo(raiz->esq, codigo);
-    } else if (codigo > raiz->dado.np) {
+    } else if (codigo > raiz->dado.np){
         raiz->dir = apagarNo(raiz->dir, codigo);
     } else {
         // Caso 1: Nó sem filhos ou com apenas um filho
@@ -312,20 +326,45 @@ void liberaArvore(Node **p) {
     *p = NULL;
 }
 
-/*void escreve_dados(Node *p, FILE *fw) {
+void backup(Node *p) {
+    FILE *backupFile = fopen("backup.txt", "w");
 
-    fw = fopen("produtos.txt", "w");
-
-    if (fw == NULL) {
-       perror("produtos.txt");
-       exit(-1);
+    if (backupFile == NULL) {
+        perror("backup.txt");
+        return;
     }
 
-    fwrite(p->dado.nome, sizeof(produto), MAX, fw);
-    fwrite(p->dado.np, sizeof(produto), MAX, fw);
-    fwrite(p->dado.peso, sizeof(produto), MAX, fw);
-    fwrite(p->dado.quantidade, sizeof(produto), MAX, fw);
-    fclose(fw);
-    return;
+    escreve_dados(p, backupFile);  // Use a função escreve_dados para escrever os dados no arquivo
+
+    fclose(backupFile);
+    printf("Backup realizado com sucesso!\n");
 }
-*/
+
+void restauracao(Node **p) {
+    produto temp;
+    FILE *backupFile = fopen("backup.txt", "r");
+
+    if (backupFile == NULL) {
+        perror("backup.txt");
+        return;
+    }
+
+    liberaArvore(p);  // Libera a árvore atual antes de restaurar os dados
+
+    cria(p);  // Recria a árvore
+
+    while (fscanf(backupFile, "%29s %d %f %d", temp.nome, &temp.np, &temp.peso, &temp.quantidade) == 4) {
+        insere(p, temp);  // Insere os dados na árvore
+    }
+
+    fclose(backupFile);
+    printf("Restauração concluída com sucesso!\n");
+}
+
+void escreve_dados(Node *p, FILE *fw) {
+    if (p != NULL) {
+        fprintf(fw, "%s %d %f %d\n", p->dado.nome, p->dado.np, p->dado.peso, p->dado.quantidade);
+        escreve_dados(p->esq, fw);
+        escreve_dados(p->dir, fw);
+    }
+}
