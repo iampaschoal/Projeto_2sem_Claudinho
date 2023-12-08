@@ -18,7 +18,7 @@ typedef struct no
     produto dado;
 } Node;
 
-void restauracao(Node **);
+void restauracao(Node **, int* );
 void backup(Node *);
 void escreve_dados(Node *, FILE *);
 void liberaMemoria(Node *);
@@ -30,7 +30,7 @@ void removeproduto(Node **);
 void alteraquantidade(Node **, int* );
 void alteranome(Node **);
 void alterapeso(Node **, int* );
-int insere(Node **, produto );
+int insere(Node **, produto , int*);
 void preOrdem(Node *);
 void cria(Node **);
 Node* encontrarMinimo(Node* );
@@ -42,7 +42,7 @@ int main (void)
     Node *p;
     int c = 0;
     FILE *fw;
-    int total;
+    int total = 0;
 
     printf("Sistema de Estoque\n\n");
     printf("====================\n\n");
@@ -95,7 +95,7 @@ int main (void)
 
         case 8:
             printf("\nCarregando dados...");
-            restauracao(&p);
+            restauracao(&p, &total);
             break;
 
         case 9:
@@ -119,7 +119,7 @@ void cria(Node **t)
     *t = NULL;
 }
 
-int insere(Node **t, produto dado)
+int insere(Node **t, produto dado, int *total)
 {
     if (*t == NULL)
     {
@@ -133,13 +133,16 @@ int insere(Node **t, produto dado)
         (*t)->dado = dado;
         (*t)->esq = NULL;
         (*t)->dir = NULL;
+        printf("teste 1 %i", *total);
+        *total = *total + 1;
+        printf("teste 2 %i", *total);
         return 1;
     }
 
     if (dado.np % 2 == 1)
-        return insere(&(*t)->esq, dado);
+        return insere(&(*t)->esq, dado, total);
 
-    return insere(&(*t)->dir, dado);
+    return insere(&(*t)->dir, dado, total);
 }
 
 void cadastro(Node **p, int *total)
@@ -161,6 +164,13 @@ void cadastro(Node **p, int *total)
     scanf("%f", &t.peso);
     getchar();
 
+    printf("\nDigite o numero do produto\n");
+    scanf("%i", &t.np);
+    getchar();
+
+    printf("teste 0 %i", *total);
+    getchar();
+    insere(&(*p), t, total);
 
     printf("\nDeseja cadastrar outro produto? s/n\n");
     r = getchar();
@@ -176,22 +186,21 @@ void preOrdem(Node *t)
 {
     if (t != NULL)
     {
-        printf("%s ", t->dado.nome);
-        printf("%i ", t->dado.np);
-        printf("%f ", t->dado.peso);
-        printf("%i ", t->dado.quantidade);
+        printf("\nNome do produto: %s\n", t->dado.nome);
+        printf("Numero de produto: %i\n", t->dado.np);
+        printf("Peso do produto: %f\n", t->dado.peso);
+        printf("Quantidade do produto: %i\n", t->dado.quantidade);
         preOrdem(t->esq);
         preOrdem(t->dir);
     }
 }
-
-
 
 void alteranome(Node **p)
 {
     int j;
     printf("\nDigite o numero de produto do produto que voce deseja alterar: ");
     scanf("%d", &j);
+    getchar();
 
     Node *produto = procuraProd(&j, p);
 
@@ -211,6 +220,7 @@ void alteraquantidade(Node **p, int* total)
     int j;
     printf("\nDigite o numero de produto do produto que voce deseja alterar: ");
     scanf("%d", &j);
+    getchar();
     if (j > *total)
     {
         printf("\nProduto nao encontrado!\n");
@@ -327,7 +337,7 @@ void liberaArvore(Node **p) {
 }
 
 void backup(Node *p) {
-    FILE *backupFile = fopen("backup.txt", "w");
+    FILE *backupFile = fopen("backup.txt", "wb");
 
     if (backupFile == NULL) {
         perror("backup.txt");
@@ -340,9 +350,9 @@ void backup(Node *p) {
     printf("Backup realizado com sucesso!\n");
 }
 
-void restauracao(Node **p) {
+void restauracao(Node **p, int *total) {
     produto temp;
-    FILE *backupFile = fopen("backup.txt", "r");
+    FILE *backupFile = fopen("backup.txt", "rb");
 
     if (backupFile == NULL) {
         perror("backup.txt");
@@ -354,7 +364,7 @@ void restauracao(Node **p) {
     cria(p);  // Recria a árvore
 
     while (fscanf(backupFile, "%29s %d %f %d", temp.nome, &temp.np, &temp.peso, &temp.quantidade) == 4) {
-        insere(p, temp);  // Insere os dados na árvore
+        insere(p, temp, total);  // Insere os dados na árvore
     }
 
     fclose(backupFile);
@@ -363,8 +373,9 @@ void restauracao(Node **p) {
 
 void escreve_dados(Node *p, FILE *fw) {
     if (p != NULL) {
-        fprintf(fw, "%s %d %f %d\n", p->dado.nome, p->dado.np, p->dado.peso, p->dado.quantidade);
+        fwrite(p, sizeof(Node), 1, fw);
         escreve_dados(p->esq, fw);
         escreve_dados(p->dir, fw);
     }
 }
+    
