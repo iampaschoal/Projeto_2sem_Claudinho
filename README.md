@@ -1,6 +1,6 @@
 Trabalho final de AED
 Integrantes:
 
-Cesar Policarpo
-Lucas Paschoalini
+Cesar Policarpo<br>
+Lucas Paschoalini<br>
 Pedro Amaral
