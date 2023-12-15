@@ -55,7 +55,6 @@ int main (void)
     char r;
     Node *p;
     int c = 0;
-    FILE *fw;
     int total = 0;
 
     printf("Sistema de Estoque\n\n");
@@ -371,7 +370,6 @@ void backup(Node *p) {
 void restauracao(Node **p, int *total) {
 
     produto temp;
-    int i;
     *total = 0;
     FILE *backupFile = fopen("backup.txt", "rt");
 
