@@ -1,3 +1,10 @@
+/* 
+Participantes:
+    Cesar Henrique Policarpo de Melo
+    Pedro Henrique Franco Moreira Amaral
+    Lucas Caiaffa Paschoalini
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
