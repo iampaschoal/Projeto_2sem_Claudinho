@@ -25,22 +25,29 @@ typedef struct no
     produto dado;
 } Node;
 
+//funcoes auxiliares 
+void liberaMemoria(Node *);
+void liberaArvore(Node **);
 int encontraTotal(Node* );
+Node * procuraProd(int , Node **);
+void preOrdem(Node *);
+void cria(Node **);
+Node* encontrarMinimo(Node* );
+
+//backup e restauracao
 void restauracao(Node **, int* );
 void backup(Node *);
 void escreve_dados(Node *, FILE *);
-void liberaMemoria(Node *);
-void liberaArvore(Node **);
-Node * procuraProd(int , Node **);
+
+//cadastro
 void cadastro(Node **, int *);
+int insere(Node **, produto , int*);
+
+//remocao de produtos e alteracao de dados
 void removeproduto(Node **);
 void alteraquantidade(Node **, int* );
 void alteranome(Node **);
 void alterapeso(Node **, int* );
-int insere(Node **, produto , int*);
-void preOrdem(Node *);
-void cria(Node **);
-Node* encontrarMinimo(Node* );
 Node* apagarNo(Node* , int );
 
 int main (void)
